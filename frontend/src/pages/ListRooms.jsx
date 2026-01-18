@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,20 +24,20 @@ import {
 import { Link } from "react-router-dom";
 
 const ListRooms = () => {
-  const rooms = [
-    { id: "H3DS4A", songs: 3, members: 3, maxMembers: 5 },
-    { id: "K7L2P9", songs: 12, members: 4, maxMembers: 10 },
-  ];
-
   const [maxPlayers, setMaxPlayers] = useState(0);
   const [totalSongs, setTotalSongs] = useState(0);
   const [guessingDuration, setGuessingDuration] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [rooms, setRooms] = useState([]);
+
+  const clearInput = () => {
+    setMaxPlayers(0);
+    setTotalSongs(0);
+    setGuessingDuration(0);
+  };
 
   const createRoom = async () => {
     if (!maxPlayers || !totalSongs || !guessingDuration) return;
-    console.log("testingan");
-
 
     try {
       const response = await fetch("http://127.0.0.1:3000/rooms", {
@@ -46,10 +46,11 @@ const ListRooms = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          max_players: Number(maxPlayers), 
+          max_players: Number(maxPlayers),
           total_songs: Number(totalSongs),
           guessing_duration: Number(guessingDuration),
           host_id: localStorage.getItem("aniguess_uid"),
+          username: localStorage.getItem("aniguess_username"),
         }),
       });
 
@@ -57,18 +58,24 @@ const ListRooms = () => {
         throw new Error("Gagal menghubungi server");
       }
 
-      const data = await response.json();
-      console.log("Respon dari backend:", data); 
-
+      clearInput();
       setShowModal(false);
-
-      setMaxPlayers("");
-      setTotalSongs("");
-      setGuessingDuration("");
+      getRoomsData();
     } catch (error) {
       console.error("Error saat create room:", error);
     }
   };
+
+  const getRoomsData = async () => {
+    const response = await fetch("http://127.0.0.1:3000/rooms");
+    const data = await response.json();
+    setRooms(data.data);
+    console.log(data);
+  };
+
+  useEffect(() => {
+    getRoomsData();
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#04121a] p-6">
@@ -182,7 +189,7 @@ const ListRooms = () => {
 
         {/* Grid Room (tetap sama seperti sebelumnya) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms.map((room, index) => (
+          {rooms?.map((room, index) => (
             <Card
               key={index}
               className="bg-[#112b36]/40 border-white/5 backdrop-blur-sm text-white transition-all hover:-translate-y-2 group"
@@ -190,7 +197,7 @@ const ListRooms = () => {
               <CardContent className="p-6 space-y-6">
                 <div className="flex justify-between items-start">
                   <h3 className="text-2xl font-mono font-bold text-[#5F9598]">
-                    {room.id}
+                    {room?.id}
                   </h3>
                   <div className="bg-white/5 px-2 py-1 rounded text-[10px] text-gray-400 uppercase tracking-widest">
                     Active
@@ -199,13 +206,11 @@ const ListRooms = () => {
                 <div className="flex items-center justify-between text-gray-300 text-sm">
                   <div className="flex items-center gap-2">
                     <FaMusic className="text-gray-500" />{" "}
-                    <span>{room.songs} Songs</span>
+                    <span>{room?.total_songs} Songs</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FaUsers className="text-gray-500" />{" "}
-                    <span>
-                      {room.members}/{room.maxMembers}
-                    </span>
+                    <span>1/{room?.max_players}</span>
                   </div>
                 </div>
                 <Link to={`/play/room/${room.id}`} className="block">
