@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,47 @@ const ListRooms = () => {
     { id: "K7L2P9", songs: 12, members: 4, maxMembers: 10 },
   ];
 
+  const [maxPlayers, setMaxPlayers] = useState(0);
+  const [totalSongs, setTotalSongs] = useState(0);
+  const [guessingDuration, setGuessingDuration] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+
+  const createRoom = async () => {
+    if (!maxPlayers || !totalSongs || !guessingDuration) return;
+    console.log("testingan");
+
+
+    try {
+      const response = await fetch("http://127.0.0.1:3000/rooms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          max_players: Number(maxPlayers), 
+          total_songs: Number(totalSongs),
+          guessing_duration: Number(guessingDuration),
+          host_id: localStorage.getItem("aniguess_uid"),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menghubungi server");
+      }
+
+      const data = await response.json();
+      console.log("Respon dari backend:", data); 
+
+      setShowModal(false);
+
+      setMaxPlayers("");
+      setTotalSongs("");
+      setGuessingDuration("");
+    } catch (error) {
+      console.error("Error saat create room:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#04121a] p-6">
       <div className="max-w-5xl w-full space-y-8">
@@ -52,21 +93,28 @@ const ListRooms = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="relative group">
-              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <Input
-                placeholder="Search room ID..."
-                className="bg-[#061E29]/50 border-white/10 text-white pl-10 pr-4 py-6 w-full md:w-64 rounded-xl"
-              />
+            <div className="relative group flex items-center gap-4">
+              <div>
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Input
+                  placeholder="Search room ID..."
+                  className="bg-[#061E29]/50 border-white/10 text-white pl-10 pr-4 py-6 w-full md:w-64 rounded-xl"
+                />
+              </div>
+
+              <Button
+                className="bg-[#5F9598] hover:bg-[#4d7a7d] text-white px-6 py-6 rounded-xl font-semibold flex gap-2 items-center transition-all hover:scale-105"
+                onClick={() => {
+                  setShowModal(true);
+                }}
+              >
+                <FaPlus />
+                <span>Create Room</span>
+              </Button>
             </div>
 
             {/* MODAL CREATE ROOM */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="bg-[#5F9598] hover:bg-[#4d7a7d] text-white px-6 py-6 rounded-xl font-semibold flex gap-2 items-center transition-all hover:scale-105">
-                  <FaPlus /> <span>Create Room</span>
-                </Button>
-              </DialogTrigger>
+            <Dialog open={showModal} onOpenChange={setShowModal}>
               <DialogContent className="bg-[#0b2633] border-white/10 text-white sm:max-w-[425px] rounded-2xl shadow-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-[#5F9598]">
@@ -87,6 +135,7 @@ const ListRooms = () => {
                     <Input
                       type="number"
                       placeholder="e.g. 20"
+                      onChange={(evt) => setGuessingDuration(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
                   </div>
@@ -99,6 +148,7 @@ const ListRooms = () => {
                     <Input
                       type="number"
                       placeholder="e.g. 10"
+                      onChange={(evt) => setTotalSongs(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
                   </div>
@@ -111,13 +161,17 @@ const ListRooms = () => {
                     <Input
                       type="number"
                       placeholder="e.g. 5"
+                      onChange={(evt) => setMaxPlayers(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
                   </div>
                 </div>
 
                 <DialogFooter className="mt-4">
-                  <Button className="w-full py-6 bg-[#5F9598] hover:bg-[#4d7a7d] font-bold text-lg rounded-xl transition-all shadow-lg shadow-[#5f9598]/20">
+                  <Button
+                    className="w-full py-6 bg-[#5F9598] hover:bg-[#4d7a7d] font-bold text-lg rounded-xl transition-all shadow-lg shadow-[#5f9598]/20"
+                    onClick={() => createRoom()}
+                  >
                     Launch Room
                   </Button>
                 </DialogFooter>
