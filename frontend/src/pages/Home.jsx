@@ -14,17 +14,18 @@ import { FaPlay, FaUsers } from "react-icons/fa";
 const Home = () => {
   const [username, setUsername] = useState("");
 
-  const saveUsernameToLocalStorage = () => {
+  const saveUserData = () => {
     if (username.length < 1) return;
-    localStorage.setItem("username", username);
+    localStorage.setItem("aniguess_username", username);
+    localStorage.setItem("aniguess_uid", window.crypto.randomUUID());
   };
 
-  const getUsernameFromLocalStorage = () => {
-    setUsername(localStorage.getItem("username"));
+  const getUserData = () => {
+    setUsername(localStorage.getItem("aniguess_username"));
   };
 
   useEffect(() => {
-    getUsernameFromLocalStorage();
+    getUserData();
   }, []);
 
   return (
@@ -61,7 +62,7 @@ const Home = () => {
           <Link to="/play/solo" className="w-full">
             <Button
               className="w-full py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20"
-              onClick={saveUsernameToLocalStorage}
+              onClick={saveUserData}
             >
               <FaPlay className="text-xs" /> Solo Mode
             </Button>
@@ -70,7 +71,7 @@ const Home = () => {
           <Link to="/rooms" className="w-full">
             <Button
               className="w-full py-7 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95"
-              onClick={saveUsernameToLocalStorage}
+              onClick={saveUserData}
             >
               <FaUsers /> Browse Rooms
             </Button>
