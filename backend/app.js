@@ -56,13 +56,30 @@ app.get("/", async (req, res) => {
   res.json({ msg: "hello" });
 });
 
-app.get("/rooms", (req, res) => {
-  const { room_id } = req.query;
+app.get("/rooms", async (req, res) => {
+  try {
+    const keys = await client.keys("room:*:details");
+    const rooms = await Promise.all(
+      keys.map(async (key) => {
+        const details = await client.HGETALL(key);
+        console.log(details);
+        const roomId = key.split(":")[1];
+        return {
+          id: roomId,
+          max_players: Number(details.max_players),
+          total_songs: Number(details.total_songs),
+        };
+      }),
+    );
+    res.json({ success: true, data: rooms });
+  } catch (error) {
+    res.json({ error });
+  }
 });
 
 app.post("/rooms", async (req, res) => {
-  const { max_players, total_songs, guessing_duration, host_id } = req.body;
-  console.log(req.body);
+  const { max_players, total_songs, guessing_duration, host_id, username } =
+    req.body;
   const roomId = await generateRoomId();
 
   try {
@@ -73,13 +90,19 @@ app.post("/rooms", async (req, res) => {
       host_id,
     });
 
+    await client.ZADD(`rooms:${roomId}:scores`, [
+      {
+        score: 0,
+        value: `${host_id}:${username}`,
+      },
+    ]);
+
     res.json({
       success: true,
       roomId: roomId,
       details: req.body,
     });
   } catch (error) {
-    console.log(error);
     res.json({ success: false, data: null });
   }
 });
