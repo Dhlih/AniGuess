@@ -1,4 +1,5 @@
 const { customAlphabet } = require("nanoid");
+const {client} = require("../config/redis");
 
 const generateRoomId = async () => {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
