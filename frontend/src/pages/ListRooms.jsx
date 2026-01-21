@@ -50,7 +50,7 @@ const ListRooms = () => {
           total_songs: Number(totalSongs),
           guessing_duration: Number(guessingDuration),
           host_id: localStorage.getItem("aniguess_uid"),
-          username: localStorage.getItem("aniguess_username"),
+          host_username: localStorage.getItem("aniguess_username"),
         }),
       });
 
@@ -70,7 +70,30 @@ const ListRooms = () => {
     const response = await fetch("http://127.0.0.1:3000/rooms");
     const data = await response.json();
     setRooms(data.data);
-    console.log(data);
+  };
+
+  const joinRoom = async (roomId) => {
+    try {
+      const response = await fetch("http://127.0.0.1:3000/rooms/join", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          room_id: roomId,
+          player_id: localStorage.getItem("aniguess_uid"),
+          player_username: localStorage.getItem("aniguess_username"),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menghubungi server");
+      }
+
+      console.log("Berhasil join room");
+    } catch (error) {
+      console.error("Error saat join room:", error);
+    }
   };
 
   useEffect(() => {
@@ -197,7 +220,7 @@ const ListRooms = () => {
               <CardContent className="p-6 space-y-6">
                 <div className="flex justify-between items-start">
                   <h3 className="text-2xl font-mono font-bold text-[#5F9598]">
-                    {room?.id}
+                    {room?.room_id}
                   </h3>
                   <div className="bg-white/5 px-2 py-1 rounded text-[10px] text-gray-400 uppercase tracking-widest">
                     Active
@@ -213,8 +236,11 @@ const ListRooms = () => {
                     <span>1/{room?.max_players}</span>
                   </div>
                 </div>
-                <Link to={`/play/room/${room.id}`} className="block">
-                  <Button className="w-full py-6 bg-white/5 group-hover:bg-[#5F9598] border border-white/10 group-hover:border-transparent text-white rounded-xl transition-all font-bold">
+                <Link to={`/rooms/${room?.room_id}`} className="block">
+                  <Button
+                    className="w-full py-6 bg-white/5 group-hover:bg-[#5F9598] border border-white/10 group-hover:border-transparent text-white rounded-xl transition-all font-bold"
+                    onClick={() => joinRoom(room?.room_id)}
+                  >
                     Join Room
                   </Button>
                 </Link>
