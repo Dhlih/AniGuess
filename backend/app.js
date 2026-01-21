@@ -5,23 +5,24 @@ const cors = require("cors");
 
 // import routes
 const roomRoutes = require("./routes/roomRoutes");
-const connectMongoDB = require("./config/mongodb");
 
+const connectMongoDB = require("./config/mongodb");
+const { connectRedis } = require("./config/redis");
 require("dotenv").config();
 
+// middleware
 const corsOptions = {
   origin: process.env.FRONTEND_URI,
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type,Authorization",
   credentials: true,
 };
-
-// middleware
 app.use(express.json());
 app.use(cors(corsOptions));
 
 // database connection
-connectMongoDB()
+connectMongoDB();
+connectRedis();
 
 // routing
 app.use("/rooms", roomRoutes);
