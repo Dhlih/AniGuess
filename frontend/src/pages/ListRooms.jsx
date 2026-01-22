@@ -21,7 +21,7 @@ import {
   FaPlus,
   FaClock,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const ListRooms = () => {
   const [maxPlayers, setMaxPlayers] = useState(0);
@@ -29,6 +29,7 @@ const ListRooms = () => {
   const [guessingDuration, setGuessingDuration] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const clearInput = () => {
     setMaxPlayers(0);
@@ -67,7 +68,8 @@ const ListRooms = () => {
   };
 
   const getRoomsData = async () => {
-    const response = await fetch("http://127.0.0.1:3000/rooms");
+    const idQuery = searchParams.get("id") || "";
+    const response = await fetch(`http://127.0.0.1:3000/rooms?id=${idQuery}`);
     const data = await response.json();
     setRooms(data.data);
   };
@@ -129,6 +131,12 @@ const ListRooms = () => {
                 <Input
                   placeholder="Search room ID..."
                   className="bg-[#061E29]/50 border-white/10 text-white pl-10 pr-4 py-6 w-full md:w-64 rounded-xl"
+                  onChange={(e) => setSearchParams({ id: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      getRoomsData();
+                    }
+                  }}
                 />
               </div>
 

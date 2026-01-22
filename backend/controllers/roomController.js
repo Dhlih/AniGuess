@@ -2,8 +2,13 @@ const generateRoomId = require("../helper/generateRoomId");
 const { client } = require("../config/redis");
 
 const getRooms = async (req, res) => {
+  const { id } = req.query;
   try {
-    const keys = await client.keys("rooms:*:details");
+    const searchQuery = id ? `${id}*` : "*";
+    const pattern = `rooms:${searchQuery}:details`;
+
+    const keys = await client.keys(pattern);
+
     const rooms = await Promise.all(
       keys.map(async (key) => {
         const details = await client.HGETALL(key);
@@ -26,7 +31,7 @@ const getRoom = async (req, res) => {
 
   try {
     let players = await client.ZRANGE(`rooms:${roomId}:scores`, 0, -1);
-    players = players.map((player) => {
+    const formattedPlayers = players.map((player) => {
       const [uid, username] = player.split(":");
       return {
         id: uid,
@@ -45,7 +50,7 @@ const getRoom = async (req, res) => {
     res.json({
       success: true,
       data: {
-        players,
+        players: formattedPlayers,
         max_players: room.max_players,
         host_id: room.host_id,
         total_players: totalPlayers,
