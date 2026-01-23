@@ -15,17 +15,22 @@ const Home = () => {
   const [username, setUsername] = useState("");
 
   const saveUserData = () => {
+    const idUserExist = localStorage.getItem("aniguess_uid");
     if (username.length < 1) return;
+
     localStorage.setItem("aniguess_username", username);
-    localStorage.setItem("aniguess_uid", window.crypto.randomUUID());
+
+    if (!idUserExist) {
+      localStorage.setItem("aniguess_uid", window.crypto.randomUUID());
+    }
   };
 
-  const getUserData = () => {
+  const getUserUsername = () => {
     setUsername(localStorage.getItem("aniguess_username"));
   };
 
   useEffect(() => {
-    getUserData();
+    getUserUsername();
   }, []);
 
   return (
@@ -53,7 +58,7 @@ const Home = () => {
               className="px-5 py-7 bg-white/5 border-white/10 focus:border-[#5F9598] focus:ring-[#5F9598] text-white rounded-xl placeholder:text-gray-600 transition-all"
               onChange={(evt) => setUsername(evt.target.value)}
               placeholder="Enter your username..."
-              value={username}
+              value={username || ""}
             />
           </div>
         </CardContent>
