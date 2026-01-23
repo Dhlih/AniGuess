@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,17 +8,28 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { FaPlay, FaTrash, FaUser, FaCrown, FaLink } from "react-icons/fa";
+import { SocketContext } from "@/context/socketContext";
 
 const WaitingRoom = ({ roomId }) => {
   const [data, setData] = useState();
   const userId = localStorage.getItem("aniguess_uid");
+  const socket = useContext(SocketContext);
+  const username = localStorage.getItem("aniguess_username");
 
   const getRoomData = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:3000/rooms/${roomId}`);
-      const data = await response.json();
-      console.log(data);
-      setData(data.data);
+      socket.connect();
+
+      socket.emit("join-room", {
+        room_id: roomId,
+        player_id: userId,
+        player_username: username,
+      });
+
+      socket.on("room-update", (data) => {
+        setData(data);
+        console.log(data);
+      });
     } catch (error) {
       console.log("Gagal mengambil data room", error);
     }
@@ -26,7 +37,13 @@ const WaitingRoom = ({ roomId }) => {
 
   useEffect(() => {
     getRoomData();
-  }, []);
+
+    // 4. Cleanup saat pindah halaman
+    return () => {
+      socket.off("room-update"); // Hapus listener
+      socket.disconnect(); // Putuskan koneksi
+    };
+  }, [socket, roomId]);
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-center items-center bg-[#04121a] p-5 selection:bg-[#5F9598]/30 overflow-x-hidden">
@@ -72,14 +89,14 @@ const WaitingRoom = ({ roomId }) => {
               {data?.players.map((player) => (
                 <div
                   key={player.id}
-                  className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+                  className={`flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-[#5F9598]/20 rounded-lg">
                       <FaUser className="text-[#5F9598]" />
                     </div>
                     <span className="font-medium tracking-wide">
-                      {player.username}
+                      {player.id === userId ? "Me" : player.username}
                     </span>
                   </div>
                   {player.id === data?.host_id && (
