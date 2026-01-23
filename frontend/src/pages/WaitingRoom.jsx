@@ -8,13 +8,13 @@ import {
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { FaPlay, FaTrash, FaUser, FaCrown, FaLink } from "react-icons/fa";
-import { SocketContext } from "@/context/socketContext";
+import { SocketContext } from "@/context/SocketContext";
+import { UserContext } from "@/context/userContext";
 
-const WaitingRoom = ({ roomId }) => {
+const WaitingRoom = ({ roomId, setRoomStatus }) => {
   const [data, setData] = useState();
-  const userId = localStorage.getItem("aniguess_uid");
   const socket = useContext(SocketContext);
-  const username = localStorage.getItem("aniguess_username");
+  const { username, userId } = useContext(UserContext);
 
   const getRoomData = async () => {
     try {
@@ -28,11 +28,22 @@ const WaitingRoom = ({ roomId }) => {
 
       socket.on("room-update", (data) => {
         setData(data);
-        console.log(data);
       });
     } catch (error) {
       console.log("Gagal mengambil data room", error);
     }
+  };
+
+  const startGame = async () => {
+    socket.connect();
+
+    socket.emit("start-game", {
+      room_id: roomId,
+    });
+
+    socket.on("game-started", (data) => {
+      setRoomStatus(data.status);
+    });
   };
 
   useEffect(() => {
@@ -112,7 +123,10 @@ const WaitingRoom = ({ roomId }) => {
 
         {userId === data?.host_id && (
           <CardFooter className="flex flex-col sm:flex-row items-center gap-4 p-8 pt-4 border-t border-white/5 bg-black/20">
-            <Button className="w-full sm:w-1/2 py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20">
+            <Button
+              className="w-full sm:w-1/2 py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20"
+              onClick={() => startGame()}
+            >
               <FaPlay className="text-xs" /> Start Game
             </Button>
 

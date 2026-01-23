@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,30 +8,12 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Link } from "react-router-dom";
 import { FaPlay, FaUsers } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "@/context/userContext";
 
 const Home = () => {
-  const [username, setUsername] = useState("");
-
-  const saveUserData = () => {
-    const idUserExist = localStorage.getItem("aniguess_uid");
-    if (username.length < 1) return;
-
-    localStorage.setItem("aniguess_username", username);
-
-    if (!idUserExist) {
-      localStorage.setItem("aniguess_uid", window.crypto.randomUUID());
-    }
-  };
-
-  const getUserUsername = () => {
-    setUsername(localStorage.getItem("aniguess_username"));
-  };
-
-  useEffect(() => {
-    getUserUsername();
-  }, []);
+  const { username, setUsername, saveUserData } = useContext(UserContext);
 
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center bg-[#04121a] p-5 selection:bg-[#5F9598]/30 overflow-hidden">
@@ -45,14 +27,14 @@ const Home = () => {
             AniGuess
           </h1>
           <p className="text-gray-400 text-sm mt-2 tracking-wide uppercase">
-            Anime Opening Knowledge Test
+            LET'S TEST YOUR ANIME OPENING KNOWLEDGE
           </p>
         </CardHeader>
 
         <CardContent className="space-y-4 px-8">
           <div className="space-y-2">
             <Label className="text-xs font-semibold uppercase tracking-widest text-gray-500 ml-1">
-              Player Identity
+              USERNAME
             </Label>
             <Input
               className="px-5 py-7 bg-white/5 border-white/10 focus:border-[#5F9598] focus:ring-[#5F9598] text-white rounded-xl placeholder:text-gray-600 transition-all"
@@ -64,30 +46,21 @@ const Home = () => {
         </CardContent>
 
         <CardFooter className="flex flex-col sm:flex-row items-center gap-4 p-8 pt-4">
-          <Link to="/play/solo" className="w-full">
-            <Button
-              className="w-full py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20"
-              onClick={saveUserData}
-            >
-              <FaPlay className="text-xs" /> Solo Mode
-            </Button>
-          </Link>
+          <Button
+            className="w-full md:w-1/2 py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20"
+            onClick={saveUserData}
+          >
+            <FaPlay className="text-xs" /> Solo Mode
+          </Button>
 
-          <Link to="/rooms" className="w-full">
-            <Button
-              className="w-full py-7 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95"
-              onClick={saveUserData}
-            >
-              <FaUsers /> Browse Rooms
-            </Button>
-          </Link>
+          <Button
+            className="w-full sm:w-1/2 py-7 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95"
+            onClick={saveUserData}
+          >
+            <FaUsers /> Browse Rooms
+          </Button>
         </CardFooter>
       </Card>
-
-      {/* Footer Note */}
-      <p className="mt-8 text-gray-600 text-xs tracking-[0.2em] uppercase">
-        v1.0.0 &bull; Press Start to Play
-      </p>
     </div>
   );
 };

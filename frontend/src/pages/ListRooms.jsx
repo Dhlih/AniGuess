@@ -23,17 +23,19 @@ import {
 } from "react-icons/fa";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { SocketContext } from "@/context/socketContext";
+import { SocketContext } from "@/context/SocketContext";
+import { UserContext } from "@/context/userContext";
 
 const ListRooms = () => {
   const [maxPlayers, setMaxPlayers] = useState(0);
   const [totalSongs, setTotalSongs] = useState(0);
   const [guessingDuration, setGuessingDuration] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [rooms, setRooms] = useState([]);
+  const [data, setData] = useState([]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const socket = useContext(SocketContext);
+  const {username, userId} = useContext(UserContext)
 
   const createRoom = async () => {
     if (!maxPlayers || !totalSongs || !guessingDuration) return;
@@ -43,8 +45,8 @@ const ListRooms = () => {
         max_players: Number(maxPlayers),
         total_songs: Number(totalSongs),
         guessing_duration: Number(guessingDuration),
-        host_id: localStorage.getItem("aniguess_uid"),
-        host_username: localStorage.getItem("aniguess_username"),
+        host_id: userId,
+        host_username: username,
       });
 
       clearInput();
@@ -60,7 +62,8 @@ const ListRooms = () => {
     const response = await axios.get(
       `http://127.0.0.1:3000/rooms?id=${idQuery}`,
     );
-    setRooms(response.data.data);
+    console.log(response.data);
+    setData(response.data.data);
   };
 
   const joinRoom = async (roomId) => {
@@ -69,8 +72,8 @@ const ListRooms = () => {
 
       socket.emit("join-room", {
         room_id: roomId,
-        player_id: localStorage.getItem("aniguess_uid"),
-        player_username: localStorage.getItem("aniguess_username"),
+        player_id: userId,
+        player_username: username,
       });
 
       console.log("Berhasil join room");
@@ -207,20 +210,15 @@ const ListRooms = () => {
 
         {/* Grid Room (tetap sama seperti sebelumnya) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rooms?.map((room, index) => (
+          {data.rooms?.map((room, index) => (
             <Card
               key={index}
               className="bg-[#112b36]/40 border-white/5 backdrop-blur-sm text-white transition-all hover:-translate-y-2 group"
             >
               <CardContent className="p-6 space-y-6">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-2xl font-mono font-bold text-[#5F9598]">
-                    {room?.room_id}
-                  </h3>
-                  <div className="bg-white/5 px-2 py-1 rounded text-[10px] text-gray-400 uppercase tracking-widest">
-                    Active
-                  </div>
-                </div>
+                <h3 className="text-2xl font-mono font-bold text-[#5F9598]">
+                  {room?.room_id}
+                </h3>
                 <div className="flex items-center justify-between text-gray-300 text-sm">
                   <div className="flex items-center gap-2">
                     <FaMusic className="text-gray-500" />{" "}
@@ -228,7 +226,9 @@ const ListRooms = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <FaUsers className="text-gray-500" />{" "}
-                    <span>1/{room?.max_players}</span>
+                    <span>
+                      {room?.total_player}/{room?.max_players}
+                    </span>
                   </div>
                 </div>
                 <Link to={`/rooms/${room?.room_id}`} className="block">
