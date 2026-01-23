@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
+
 import WaitingRoom from "./WaitingRoom";
 import PlayingRoom from "./PlayingRoom";
 
@@ -9,9 +11,11 @@ const RoomPage = () => {
 
   const getRoomStatus = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:3000/rooms/${id}/status`);
-      const data = await response.json();
-      setRoomStatus(data.data.room_status);
+      const response = await axios.get(
+        `http://127.0.0.1:3000/rooms/${id}/status`,
+      );
+      console.log(response);
+      setRoomStatus(response.data.data.room_status);
     } catch (error) {
       console.log("Gagal mengambil status room", error);
     }
@@ -23,7 +27,9 @@ const RoomPage = () => {
 
   return (
     <div>
-      {roomStatus === "waiting" && <WaitingRoom roomId={id} />}
+      {roomStatus === "waiting" && (
+        <WaitingRoom roomId={id} setRoomStatus={setRoomStatus} />
+      )}
       {roomStatus === "playing" && <PlayingRoom />}
     </div>
   );
