@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { SocketProvider } from "./context/socketContext";
+
 import Home from "./pages/Home";
 import ListRooms from "./pages/ListRooms";
 import RoomPage from "./pages/RoomPage";
@@ -9,7 +11,7 @@ const App = () => {
   const hasCredentials = username && userId ? true : false;
 
   return (
-    <div>
+    <SocketProvider>
       <Routes>
         <Route path="/" element={<Home />} />
 
@@ -26,7 +28,7 @@ const App = () => {
         {/* Redirect jika user mengetik URL ngawur */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
-    </div>
+    </SocketProvider>
   );
 };
 
