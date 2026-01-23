@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { Link, useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { SocketContext } from "@/context/socketContext";
 
 const ListRooms = () => {
   const [maxPlayers, setMaxPlayers] = useState(0);
@@ -29,35 +31,21 @@ const ListRooms = () => {
   const [guessingDuration, setGuessingDuration] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [rooms, setRooms] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const clearInput = () => {
-    setMaxPlayers(0);
-    setTotalSongs(0);
-    setGuessingDuration(0);
-  };
+  const [searchParams, setSearchParams] = useSearchParams();
+  const socket = useContext(SocketContext);
 
   const createRoom = async () => {
     if (!maxPlayers || !totalSongs || !guessingDuration) return;
 
     try {
-      const response = await fetch("http://127.0.0.1:3000/rooms", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          max_players: Number(maxPlayers),
-          total_songs: Number(totalSongs),
-          guessing_duration: Number(guessingDuration),
-          host_id: localStorage.getItem("aniguess_uid"),
-          host_username: localStorage.getItem("aniguess_username"),
-        }),
+      await axios.post("http://127.0.0.1:3000/rooms", {
+        max_players: Number(maxPlayers),
+        total_songs: Number(totalSongs),
+        guessing_duration: Number(guessingDuration),
+        host_id: localStorage.getItem("aniguess_uid"),
+        host_username: localStorage.getItem("aniguess_username"),
       });
-
-      if (!response.ok) {
-        throw new Error("Gagal menghubungi server");
-      }
 
       clearInput();
       setShowModal(false);
@@ -69,33 +57,32 @@ const ListRooms = () => {
 
   const getRoomsData = async () => {
     const idQuery = searchParams.get("id") || "";
-    const response = await fetch(`http://127.0.0.1:3000/rooms?id=${idQuery}`);
-    const data = await response.json();
-    setRooms(data.data);
+    const response = await axios.get(
+      `http://127.0.0.1:3000/rooms?id=${idQuery}`,
+    );
+    setRooms(response.data.data);
   };
 
   const joinRoom = async (roomId) => {
     try {
-      const response = await fetch("http://127.0.0.1:3000/rooms/join", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          room_id: roomId,
-          player_id: localStorage.getItem("aniguess_uid"),
-          player_username: localStorage.getItem("aniguess_username"),
-        }),
-      });
+      socket.connect();
 
-      if (!response.ok) {
-        throw new Error("Gagal menghubungi server");
-      }
+      socket.emit("join-room", {
+        room_id: roomId,
+        player_id: localStorage.getItem("aniguess_uid"),
+        player_username: localStorage.getItem("aniguess_username"),
+      });
 
       console.log("Berhasil join room");
     } catch (error) {
       console.error("Error saat join room:", error);
     }
+  };
+
+  const clearInput = () => {
+    setMaxPlayers(0);
+    setTotalSongs(0);
+    setGuessingDuration(0);
   };
 
   useEffect(() => {
