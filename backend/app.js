@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 
 //  import socket handlers
 const roomSocket = require("./sockets/roomSocket");
+const gameSocket = require("./sockets/gameSocket");
 
 // import routes
 const roomRoutes = require("./routes/roomRoutes");
@@ -42,6 +43,7 @@ connectRedis();
 
 // web socket
 roomSocket(io);
+gameSocket(io);
 
 // routing
 app.use("/rooms", roomRoutes);
