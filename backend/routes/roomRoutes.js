@@ -4,12 +4,10 @@ const roomController = require("../controllers/roomController");
 
 router.get("/", roomController.getRooms);
 
-router.get("/:roomId", roomController.getRoom);
+router.post("/", roomController.createRoom);
 
 router.get("/:roomId/status", roomController.getRoomStatus);
 
-router.post("/", roomController.createRoom);
-
-router.post("/join", roomController.joinRoom);
+router.get("/:roomId/player/:playerId", roomController.IsPlayerInRoom);
 
 module.exports = router;
