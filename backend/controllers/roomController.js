@@ -3,24 +3,26 @@ const { client } = require("../config/redis");
 
 const getRooms = async (req, res) => {
   const { id } = req.query;
+
   try {
     const searchQuery = id ? `${id}*` : "*";
-    const pattern = `rooms:${searchQuery}:details`;
-
-    const keys = await client.keys(pattern);
+    const keys = await client.keys(`rooms:${searchQuery}:details`);
 
     const rooms = await Promise.all(
       keys.map(async (key) => {
         const details = await client.HGETALL(key);
         const roomId = key.split(":")[1];
+        const scores = await client.ZRANGE(`rooms:${roomId}:scores`, 0, -1);
+
         return {
           room_id: roomId,
           max_players: Number(details.max_players),
           total_songs: Number(details.total_songs),
+          total_player: scores.length,
         };
       }),
     );
-    res.status(200).json({ success: true, data: rooms });
+    res.status(200).json({ success: true, data: { rooms } });
   } catch (error) {
     res.status(500).json({ success: false, data: null });
   }
@@ -34,6 +36,7 @@ const createRoom = async (req, res) => {
     host_id,
     host_username,
   } = req.body;
+
   const roomId = await generateRoomId();
 
   try {
@@ -74,4 +77,12 @@ const getRoomStatus = async (req, res) => {
   }
 };
 
-module.exports = { getRooms, createRoom, getRoomStatus, getRoom };
+const IsPlayerInRoom = async (req,res) => {
+  try {
+    const exists = await client.Z(``)
+  } catch (error) {
+    res.status(500).json({ success: false, data: null });
+  }
+};
+
+module.exports = { getRooms, createRoom, getRoomStatus, IsPlayerInRoom };
