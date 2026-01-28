@@ -8,8 +8,12 @@ import ListRooms from "./pages/ListRooms";
 import RoomPage from "./pages/RoomPage";
 
 const AppRoutes = () => {
-  const { username, userId } = useContext(UserContext);
+  const { username, userId, isLoading } = useContext(UserContext);
   const hasCredentials = username && userId;
+
+  if (isLoading) {
+    return <div>Loading</div>;
+  }
 
   return (
     <Routes>
