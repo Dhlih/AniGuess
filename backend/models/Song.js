@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const songSchema = new mongoose.Schema({
   anime_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "Anime",
     required: true,
   },
   video_url: {
