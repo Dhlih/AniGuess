@@ -16,45 +16,31 @@ const WaitingRoom = ({ roomId, setRoomStatus }) => {
   const socket = useContext(SocketContext);
   const { username, userId } = useContext(UserContext);
 
-  const getRoomData = async () => {
-    try {
-      socket.connect();
-
-      socket.emit("join-room", {
-        room_id: roomId,
-        player_id: userId,
-        player_username: username,
-      });
-
-      socket.on("room-update", (data) => {
-        setData(data);
-      });
-    } catch (error) {
-      console.log("Gagal mengambil data room", error);
-    }
-  };
-
   const startGame = async () => {
-    socket.connect();
-
     socket.emit("start-game", {
       room_id: roomId,
     });
 
-    socket.on("game-started", (data) => {
+    socket.on("room-update", (data) => {
       setRoomStatus(data.status);
     });
   };
 
   useEffect(() => {
-    getRoomData();
+    socket.emit("join-room", {
+      room_id: roomId,
+      player_id: userId,
+      player_username: username,
+    });
 
-    // 4. Cleanup saat pindah halaman
+    socket.on("players-update", (data) => {
+      setData(data);
+    });
+
     return () => {
-      socket.off("room-update"); // Hapus listener
-      socket.disconnect(); // Putuskan koneksi
+      socket.off("players-update");
     };
-  }, [socket, roomId]);
+  }, [socket, roomId, username, userId]);
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-center items-center bg-[#04121a] p-5 selection:bg-[#5F9598]/30 overflow-x-hidden">
