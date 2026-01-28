@@ -48,18 +48,20 @@ const createRoom = async (req, res) => {
       status: "waiting",
     });
 
-    // host score
+    // store host init score
     await client.ZADD(`rooms:${roomId}:scores`, [
       {
         score: 0,
         value: `${host_id}:${host_username}`,
       },
     ]);
-
+    console.log("data room terbuat");
     res.status(201).json({
       success: true,
-      roomId: roomId,
-      details: req.body,
+      data: {
+        room_id: roomId,
+        details: req.body,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, data: null });
@@ -77,9 +79,9 @@ const getRoomStatus = async (req, res) => {
   }
 };
 
-const IsPlayerInRoom = async (req,res) => {
+const IsPlayerInRoom = async (req, res) => {
   try {
-    const exists = await client.Z(``)
+    const exists = await client.Z(``);
   } catch (error) {
     res.status(500).json({ success: false, data: null });
   }
