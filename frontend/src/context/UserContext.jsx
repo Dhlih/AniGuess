@@ -6,16 +6,20 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [username, setUsername] = useState("");
   const [userId, setUserId] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
 
   const getUserData = () => {
     setUsername(localStorage.getItem("aniguess_username"));
     setUserId(localStorage.getItem("aniguess_uid"));
+
+    setIsLoading(false);
   };
 
   const saveUserData = () => {
     if (username.length < 1) return;
-    
+
     localStorage.setItem("aniguess_uid", window.crypto.randomUUID());
     localStorage.setItem("aniguess_username", username);
 
@@ -28,7 +32,7 @@ export const UserProvider = ({ children }) => {
 
   return (
     <UserContext.Provider
-      value={{ username, userId, setUsername, saveUserData }}
+      value={{ username, userId, setUsername, saveUserData, isLoading }}
     >
       {children}
     </UserContext.Provider>
