@@ -21,7 +21,7 @@ import {
   FaPlus,
   FaClock,
 } from "react-icons/fa";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { SocketContext } from "@/context/SocketContext";
 import { UserContext } from "@/context/userContext";
@@ -35,13 +35,14 @@ const ListRooms = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const socket = useContext(SocketContext);
-  const {username, userId} = useContext(UserContext)
+  const { username, userId } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const createRoom = async () => {
     if (!maxPlayers || !totalSongs || !guessingDuration) return;
 
     try {
-      await axios.post("http://127.0.0.1:3000/rooms", {
+      const response = await axios.post("http://127.0.0.1:3000/rooms", {
         max_players: Number(maxPlayers),
         total_songs: Number(totalSongs),
         guessing_duration: Number(guessingDuration),
@@ -49,9 +50,8 @@ const ListRooms = () => {
         host_username: username,
       });
 
-      clearInput();
-      setShowModal(false);
-      getRoomsData();
+      const roomId = response.data.data.room_id;
+      navigate(`/rooms/${roomId}`);
     } catch (error) {
       console.error("Error saat create room:", error);
     }
@@ -62,30 +62,19 @@ const ListRooms = () => {
     const response = await axios.get(
       `http://127.0.0.1:3000/rooms?id=${idQuery}`,
     );
-    console.log(response.data);
     setData(response.data.data);
   };
 
   const joinRoom = async (roomId) => {
     try {
-      socket.connect();
-
       socket.emit("join-room", {
         room_id: roomId,
         player_id: userId,
         player_username: username,
       });
-
-      console.log("Berhasil join room");
     } catch (error) {
       console.error("Error saat join room:", error);
     }
-  };
-
-  const clearInput = () => {
-    setMaxPlayers(0);
-    setTotalSongs(0);
-    setGuessingDuration(0);
   };
 
   useEffect(() => {
