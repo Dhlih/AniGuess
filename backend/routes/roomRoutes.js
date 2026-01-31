@@ -6,8 +6,6 @@ router.get("/", roomController.getRooms);
 
 router.post("/", roomController.createRoom);
 
-router.get("/:roomId/status", roomController.getRoomStatus);
-
-router.get("/:roomId/player/:playerId", roomController.IsPlayerInRoom);
+router.get("/:roomId/validate", roomController.getRoomAccess);
 
 module.exports = router;
