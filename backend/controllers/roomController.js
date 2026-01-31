@@ -55,7 +55,7 @@ const createRoom = async (req, res) => {
         value: `${host_id}:${host_username}`,
       },
     ]);
-    console.log("data room terbuat");
+    
     res.status(201).json({
       success: true,
       data: {
@@ -68,23 +68,30 @@ const createRoom = async (req, res) => {
   }
 };
 
-const getRoomStatus = async (req, res) => {
+const getRoomAccess = async (req, res) => {
+  const { player_id, player_username } = req.query;
   const { roomId } = req.params;
+
+  const formatPlayer = `${player_id}:${player_username}`;
 
   try {
     const roomStatus = await client.HGET(`rooms:${roomId}:details`, "status");
-    res.status(200).json({ success: true, data: { room_status: roomStatus } });
+    const playerScore = await client.ZSCORE(
+      `rooms:${roomId}:scores`,
+      formatPlayer,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        room_status: roomStatus,
+        is_player_in_room: playerScore !== null,
+      },
+    });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, data: null });
   }
 };
 
-const IsPlayerInRoom = async (req, res) => {
-  try {
-    const exists = await client.Z(``);
-  } catch (error) {
-    res.status(500).json({ success: false, data: null });
-  }
-};
-
-module.exports = { getRooms, createRoom, getRoomStatus, IsPlayerInRoom };
+module.exports = { getRooms, createRoom, getRoomAccess };
