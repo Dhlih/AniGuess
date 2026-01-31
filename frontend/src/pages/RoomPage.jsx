@@ -1,29 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 import WaitingRoom from "./WaitingRoom";
 import PlayingRoom from "./PlayingRoom";
+import { UserContext } from "@/context/UserContext";
 
 const RoomPage = () => {
   const [roomStatus, setRoomStatus] = useState("");
+  const { username, userId } = useContext(UserContext);
+  const navigate = useNavigate();
   const { id } = useParams();
 
-  const getRoomStatus = async () => {
+  const checkRoomAccess = async () => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:3000/rooms/${id}/status`,
+        `http://127.0.0.1:3000/rooms/${id}/validate`,
+        {
+          params: { player_id: userId, player_username: username },
+        },
       );
-      console.log(response);
-      setRoomStatus(response.data.data.room_status);
+      const data = response.data.data;
+      const isUserInRoom = data.is_player_in_room;
+
+      if (!isUserInRoom) {
+        console.log("tidak boleh masuk!")
+        navigate("/rooms");
+      }
+
+      setRoomStatus(data.room_status);
     } catch (error) {
       console.log("Gagal mengambil status room", error);
     }
   };
 
   useEffect(() => {
-    getRoomStatus();
-  }, []);
+    console.log(id, username, userId);
+    checkRoomAccess();
+  }, [userId, username]);
 
   return (
     <div>
