@@ -10,19 +10,24 @@ import { Badge } from "../components/ui/badge";
 import { FaPlay, FaTrash, FaUser, FaCrown, FaLink } from "react-icons/fa";
 import { SocketContext } from "@/context/SocketContext";
 import { UserContext } from "@/context/userContext";
+import { useNavigate } from "react-router-dom";
 
 const WaitingRoom = ({ roomId, setRoomStatus }) => {
   const [data, setData] = useState();
   const socket = useContext(SocketContext);
   const { username, userId } = useContext(UserContext);
+  const navigate = useNavigate();
 
   const startGame = async () => {
     socket.emit("start-game", {
       room_id: roomId,
     });
+  };
 
-    socket.on("room-update", (data) => {
-      setRoomStatus(data.status);
+  const deleteRoom = async () => {
+    socket.emit("delete-room", {
+      room_id: roomId,
+      player_id: userId,
     });
   };
 
@@ -33,12 +38,22 @@ const WaitingRoom = ({ roomId, setRoomStatus }) => {
       player_username: username,
     });
 
-    socket.on("players-update", (data) => {
-      setData(data);
+    socket.on("players-update", (players) => {
+      setData(players);
+    });
+
+    socket.on("room-update", (room) => {
+      console.log("room update", room);
+      if (room.status === "playing") setRoomStatus(room.status);
+      if (room.status === "deleted") {
+        console.log("room status", room.status);
+        navigate("/rooms");
+      }
     });
 
     return () => {
       socket.off("players-update");
+      socket.off("room-update");
     };
   }, [socket, roomId, username, userId]);
 
@@ -119,6 +134,7 @@ const WaitingRoom = ({ roomId, setRoomStatus }) => {
             <Button
               variant="destructive"
               className="w-full sm:w-1/2 py-7 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95"
+              onClick={() => deleteRoom()}
             >
               <FaTrash /> Delete Room
             </Button>
