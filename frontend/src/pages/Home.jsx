@@ -13,7 +13,22 @@ import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/context/userContext";
 
 const Home = () => {
-  const { username, setUsername, saveUserData } = useContext(UserContext);
+  const { username, setUsername, setUserId } = useContext(UserContext);
+  const navigate = useNavigate();
+
+  const saveUserData = () => {
+    if (username.length < 1) return;
+
+    const userId = window.crypto.randomUUID();
+
+    localStorage.setItem("aniguess_uid", userId);
+    localStorage.setItem("aniguess_username", username);
+
+    setUserId(userId);
+    setUsername(username);
+
+    navigate("/rooms");
+  };
 
   return (
     <div className="w-full h-screen flex flex-col justify-center items-center bg-[#04121a] p-5 selection:bg-[#5F9598]/30 overflow-hidden">
