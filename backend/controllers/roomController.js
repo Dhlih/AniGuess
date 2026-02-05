@@ -55,7 +55,7 @@ const createRoom = async (req, res) => {
         value: `${host_id}:${host_username}`,
       },
     ]);
-    
+
     res.status(201).json({
       success: true,
       data: {
@@ -86,6 +86,7 @@ const getRoomAccess = async (req, res) => {
       data: {
         room_status: roomStatus,
         is_player_in_room: playerScore !== null,
+        room_id: roomId,
       },
     });
   } catch (error) {
@@ -93,5 +94,7 @@ const getRoomAccess = async (req, res) => {
     res.status(500).json({ success: false, data: null });
   }
 };
+
+
 
 module.exports = { getRooms, createRoom, getRoomAccess };
