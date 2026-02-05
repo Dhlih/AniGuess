@@ -50,5 +50,16 @@ module.exports = (io) => {
         });
       },
     );
+
+    socket.on(
+      "message",
+      async ({ room_id, message, player_id, player_username }) => {
+        io.to(room_id).emit("message", {
+          player_id,
+          player_username,
+          message: message,
+        });
+      },
+    );
   });
 };
