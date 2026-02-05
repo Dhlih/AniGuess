@@ -15,11 +15,28 @@ const PlayingRoom = () => {
   const [showUnmuteBtn, setShowUnmuteBtn] = useState(true);
   const [videoUrl, setVideoUrl] = useState("");
   const [userAnswer, setUserAnswer] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
 
   const { id: roomId } = useParams();
 
   const socket = useContext(SocketContext);
   const { username, userId } = useContext(UserContext);
+
+  const sendMessage = async () => {
+    if (chatInput.trim().length === 0) return;
+
+    console.log("mengirimkan pesan", chatInput);
+
+    socket.emit("message", {
+      player_id: userId,
+      player_username: username,
+      message: chatInput,
+      room_id: roomId,
+    });
+
+    setChatInput("");
+  };
 
   const handleUnmute = () => {
     setIsMuted(false);
@@ -42,8 +59,6 @@ const PlayingRoom = () => {
   };
 
   useEffect(() => {
-    console.log("user answer", userAnswer);
-
     socket.emit("join-room", {
       room_id: roomId,
       player_id: userId,
@@ -58,14 +73,19 @@ const PlayingRoom = () => {
       setVideoUrl(rawUrl);
     });
 
+    socket.on("message", (data) => {
+      setMessages((prev) => [...prev, data]);
+      console.log("pesan : ", data);
+    });
+
     socket.on("leaderboard-update", ({ players }) => {
-      console.log("ada update");
       setPlayers(players);
     });
 
     return () => {
       socket.off("game-playing");
       socket.off("leaderboard-update");
+      socket.off("message");
     };
   }, [roomId, socket, userId, username]);
 
@@ -198,23 +218,59 @@ const PlayingRoom = () => {
             </h2>
           </Card>
 
-          <Card className="bg-white/5 border-white/10 flex flex-col h-[400px]">
-            <div className="p-4 border-b border-white/10">
-              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-400">
+          <Card className="bg-white/5 border-white/10 flex flex-col flex-1 overflow-hidden backdrop-blur-sm">
+            <div className="p-4 border-b border-white/10 bg-white/5">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 Live Chat
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-white">
-              {/* Chat messages placeholder */}
+
+            {/* Chat Messages Area */}
+            <div className="flex-1 min-h-48 max-h-48 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10 ">
+              {messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`w-full flex ${msg.player_id === userId ? "justify-end" : "justify-start"}`}
+                >
+                  <div className="flex flex-col">
+                    <p
+                      className="text-[11px] font-bold mb-1 ml-1"
+                      style={{ color: msg.color || "#5F9598" }}
+                    >
+                      {msg.player_id === userId ? "Me" : username}
+                    </p>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
+                      <p className="text-sm text-gray-200 break-words">
+                        {msg.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="p-3 border-t border-white/10 flex gap-2">
-              <Input
-                placeholder="Type a message..."
-                className="bg-white/5 border-white/10 text-sm focus:ring-[#5F9598] text-white"
-              />
-              <Button size="icon" className="bg-[#5F9598] hover:bg-[#4d7a7d]">
-                <FaPaperPlane className="text-xs" />
-              </Button>
+
+            {/* Input Chat Area */}
+            <div className="p-3 border-t border-white/10 bg-black/20">
+              <form
+                className="flex gap-2"
+                onSubmit={(e) => e.preventDefault()} // Logika kirim silakan Anda tambahkan nanti
+              >
+                <Input
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Type a message..."
+                  className="bg-white/5 border-white/10 text-sm focus:ring-[#5F9598] text-white rounded-xl h-10"
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="bg-[#5F9598] hover:bg-[#4d7a7d] shrink-0 rounded-xl h-10 w-10"
+                  onClick={() => sendMessage()}
+                >
+                  <FaPaperPlane className="text-xs" />
+                </Button>
+              </form>
             </div>
           </Card>
         </div>
