@@ -15,14 +15,16 @@ module.exports = (io) => {
         { NX: true },
       );
 
+      await client.SET(`players:${player_id}:room`, room_id);
+
       const room = await client.HGETALL(`rooms:${room_id}:details`);
       const hostId = room.host_id;
+
       const players = await client.ZRANGE_WITHSCORES(
         `rooms:${room_id}:scores`,
         0,
         -1,
       );
-
       const formattedPlayers = players.map((player) => {
         const [id, username] = player.value.split(":");
         return {
@@ -47,8 +49,8 @@ module.exports = (io) => {
           timer_left: timerLeft,
           current_song: currentSong,
         });
-      } 
-      
+      }
+
       if (room.status === "waiting") {
         io.to(room_id).emit("players-update", {
           players: formattedPlayers,
