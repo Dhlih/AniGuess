@@ -43,8 +43,10 @@ const WaitingRoom = ({ roomId, setRoomStatus }) => {
     });
 
     socket.on("room-update", (room) => {
-      console.log("room update", room);
-      if (room.status === "playing") setRoomStatus(room.status);
+      if (room.status === "playing") {
+        setRoomStatus(room.status);
+      }
+
       if (room.status === "deleted") {
         console.log("room status", room.status);
         navigate("/rooms");
