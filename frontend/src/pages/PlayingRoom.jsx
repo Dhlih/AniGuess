@@ -101,26 +101,30 @@ const PlayingRoom = () => {
             </h2>
           </div>
           <CardContent className="p-4 space-y-4">
-            {players?.map((player, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <span
-                  className={`text-lg font-black ${index === 0 ? "text-yellow-500" : "text-gray-500"}`}
+            {players
+              ?.sort(
+                (currPlayer, nextPlayer) => nextPlayer.score - currPlayer.score,
+              )
+              .map((player, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                 >
-                  #{index + 1}
-                </span>
-                <div className="flex-1">
-                  <p className="font-bold text-sm text-white">
-                    {player.username}
-                  </p>
+                  <span
+                    className={`text-lg font-black ${index === 0 ? "text-yellow-500" : "text-gray-500"}`}
+                  >
+                    #{index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-white">
+                      {player.username}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[#5F9598] font-bold">
+                    {player.score}
+                  </span>
                 </div>
-                <span className="font-mono text-[#5F9598] font-bold">
-                  {player.score}
-                </span>
-              </div>
-            ))}
+              ))}
           </CardContent>
         </Card>
 
