@@ -11,29 +11,6 @@ import RoomPage from "./pages/RoomPage";
 const AppRoutes = () => {
   const { username, userId, isLoading } = useContext(UserContext);
   const hasCredentials = username && userId;
-  const navigate = useNavigate();
-
-  const checkUserRoom = async () => {
-    try {
-      const response = await axios.get(
-        `http://127.0.0.1:3000/players/${userId}/current-room`,
-      );
-      const data = response.data.data;
-
-      const isUserInRoom = data.is_player_in_room;
-      const roomId = data.room_id;
-
-      if (isUserInRoom) {
-        navigate(`/rooms/${roomId}`);
-      }
-    } catch (error) {
-      console.log("Gagal mengambil status room", error);
-    }
-  };
-
-  useEffect(() => {
-    checkUserRoom();
-  });
 
   if (isLoading) {
     return <div>Loading</div>;
