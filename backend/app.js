@@ -10,7 +10,6 @@ const gameSocket = require("./sockets/gameSocket");
 
 // import routes
 const roomRoutes = require("./routes/roomRoutes");
-const playerRoutes = require("./routes/playerRoutes");
 
 // import config
 const connectMongoDB = require("./config/mongodb");
@@ -48,7 +47,6 @@ gameSocket(io);
 
 // routing
 app.use("/rooms", roomRoutes);
-app.use("/players", playerRoutes);
 
 server.listen(process.env.PORT, () => {
   console.log("Server running on port", process.env.PORT);
