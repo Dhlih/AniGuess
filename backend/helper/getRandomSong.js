@@ -1,8 +1,8 @@
 const Song = require("../models/Song");
 
-const getRandomSong = async () => {
+const getRandomSong = async (totalSongs) => {
   const song = await Song.aggregate([
-    { $sample: { size: 1 } },
+    { $sample: { size: totalSongs } },
 
     {
       $lookup: {
@@ -22,7 +22,7 @@ const getRandomSong = async () => {
     },
   ]);
 
-  return song[0]
+  return song
 };
 
 module.exports = getRandomSong;
