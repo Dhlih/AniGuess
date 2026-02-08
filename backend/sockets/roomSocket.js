@@ -4,22 +4,8 @@ const Song = require("../models/Song");
 module.exports = (io) => {
   io.on("connection", (socket) => {
     socket.on("join-room", async ({ room_id, player_username, player_id }) => {
-      socket.join(room_id);
-
-      await client.ZADD(
-        `rooms:${room_id}:scores`,
-        {
-          score: 0,
-          value: `${player_id}:${player_username}`,
-        },
-        { NX: true },
-      );
-
-      await client.SET(`players:${player_id}:room`, room_id);
-
       const room = await client.HGETALL(`rooms:${room_id}:details`);
       const hostId = room.host_id;
-
       const players = await client.ZRANGE_WITHSCORES(
         `rooms:${room_id}:scores`,
         0,
@@ -33,6 +19,35 @@ module.exports = (io) => {
           score: player.score,
         };
       });
+
+      const isPlayerInRoom =
+        formattedPlayers.filter((player) => player.id === player_id).length > 0
+          ? true
+          : false;
+
+      if (formattedPlayers.length >= Number(room.max_players)) {
+
+        socket.emit("error", {
+          msg: "Max player reached",
+        });
+      }
+
+      console.log(formattedPlayers.length, Number(room.max_players));
+      if (
+        isPlayerInRoom ||
+        formattedPlayers.length < Number(room.max_players)
+      ) {
+        socket.join(room_id);
+
+        await client.ZADD(
+          `rooms:${room_id}:scores`,
+          {
+            score: 0,
+            value: `${player_id}:${player_username}`,
+          },
+          { NX: true },
+        );
+      }
 
       if (room.status === "playing") {
         const currentSong = await client.HGETALL(
