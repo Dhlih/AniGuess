@@ -24,19 +24,15 @@ module.exports = (io) => {
         formattedPlayers.filter((player) => player.id === player_id).length > 0
           ? true
           : false;
+      const isRoomFull = formattedPlayers.length >= Number(room.max_players);
 
-      if (formattedPlayers.length >= Number(room.max_players)) {
-
+      if (isRoomFull) {
         socket.emit("error", {
           msg: "Max player reached",
         });
       }
 
-      console.log(formattedPlayers.length, Number(room.max_players));
-      if (
-        isPlayerInRoom ||
-        formattedPlayers.length < Number(room.max_players)
-      ) {
+      if (isPlayerInRoom || !isRoomFull) {
         socket.join(room_id);
 
         await client.ZADD(
