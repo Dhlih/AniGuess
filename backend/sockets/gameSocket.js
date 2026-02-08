@@ -1,23 +1,15 @@
 const { client } = require("../config/redis");
-const getRandomSong = require("../helper/getRandomSong");
+const proceedToNextRound = require("../helper/proceedToNexRound");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
     socket.on("start-game", async ({ room_id }) => {
-      const song = await getRandomSong();
-
-      let guessingDuration = await client.HGET(
-        `rooms:${room_id}:details`,
-        "guessing_duration",
-      );
-      const endAt = Date.now() + guessingDuration * 1000;
-
-      await client.HSET(`rooms:${room_id}:current_song`, {
-        video_url: song.video_url,
-        title: song.title,
-        end_at: endAt,
+      await client.HSET(`rooms:${room_id}:details`, {
+        status: "playing",
+        current_round: 1,
       });
-      await client.HSET(`rooms:${room_id}:details`, "status", "playing");
+
+      proceedToNextRound(io, room_id);
 
       io.to(room_id).emit("room-update", {
         status: "playing",
