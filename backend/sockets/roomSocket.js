@@ -1,5 +1,4 @@
 const { client } = require("../config/redis");
-const Song = require("../models/Song");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -34,7 +33,7 @@ module.exports = (io) => {
 
       if (isPlayerInRoom || !isRoomFull) {
         socket.join(room_id);
-
+        
         await client.ZADD(
           `rooms:${room_id}:scores`,
           {
@@ -50,15 +49,11 @@ module.exports = (io) => {
           `rooms:${room_id}:current_song`,
         );
 
-        const timerLeft = await client.HGET(
-          `rooms:${room_id}:details`,
-          "guessing_duration",
-        );
-
         io.to(room_id).emit("game-playing", {
           players: formattedPlayers,
-          timer_left: timerLeft,
           current_song: currentSong,
+          target_end_at: currentSong.end_at,
+          server_time: Date.now(),
         });
       }
 
