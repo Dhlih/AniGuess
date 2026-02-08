@@ -33,7 +33,7 @@ module.exports = (io) => {
 
       if (isPlayerInRoom || !isRoomFull) {
         socket.join(room_id);
-        
+
         await client.ZADD(
           `rooms:${room_id}:scores`,
           {
@@ -48,12 +48,16 @@ module.exports = (io) => {
         const currentSong = await client.HGETALL(
           `rooms:${room_id}:current_song`,
         );
+        const options = currentSong.answer_options
+          ? JSON.parse(currentSong.answer_options)
+          : [];
 
         io.to(room_id).emit("game-playing", {
           players: formattedPlayers,
           current_song: currentSong,
           target_end_at: currentSong.end_at,
           server_time: Date.now(),
+          answer_options: options,
         });
       }
 
