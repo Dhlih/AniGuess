@@ -79,6 +79,14 @@ const ListRooms = () => {
 
   useEffect(() => {
     getRoomsData();
+
+    socket.on("error", (data) => {
+      alert(data.msg);
+    });
+
+    return () => {
+      socket.off("error");
+    };
   }, []);
 
   return (
@@ -220,14 +228,12 @@ const ListRooms = () => {
                     </span>
                   </div>
                 </div>
-                <Link to={`/rooms/${room?.room_id}`} className="block">
-                  <Button
-                    className="w-full py-6 bg-white/5 group-hover:bg-[#5F9598] border border-white/10 group-hover:border-transparent text-white rounded-xl transition-all font-bold"
-                    onClick={() => joinRoom(room?.room_id)}
-                  >
-                    Join Room
-                  </Button>
-                </Link>
+                <Button
+                  className="w-full py-6 bg-white/5 group-hover:bg-[#5F9598] border border-white/10 group-hover:border-transparent text-white rounded-xl transition-all font-bold"
+                  onClick={() => joinRoom(room?.room_id)}
+                >
+                  Join Room
+                </Button>
               </CardContent>
             </Card>
           ))}
