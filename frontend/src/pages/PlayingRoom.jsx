@@ -2,14 +2,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import React, { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaTrophy, FaClock, FaPaperPlane } from "react-icons/fa";
 import { SocketContext } from "@/context/SocketContext";
 import { UserContext } from "@/context/UserContext";
 import ReactPlayer from "react-player"; // Pastikan import ini
+import Timer from "@/components/Timer";
 
 const PlayingRoom = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState("");
+  const [answerOptions, setAnswerOptions] = useState([]);
   const [players, setPlayers] = useState([]);
   const [isMuted, setIsMuted] = useState(true);
   const [showUnmuteBtn, setShowUnmuteBtn] = useState(true);
@@ -17,8 +19,11 @@ const PlayingRoom = () => {
   const [userAnswer, setUserAnswer] = useState("");
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
+  const [correctAnswer, setCorrectAnswer] = useState("");
+  const [roundEnded, setRoundEnded] = useState(false);
 
   const { id: roomId } = useParams();
+  const navigate = useNavigate()
 
   const socket = useContext(SocketContext);
   const { username, userId } = useContext(UserContext);
@@ -66,8 +71,14 @@ const PlayingRoom = () => {
     });
 
     socket.on("game-playing", ({ players, ...incomingData }) => {
+      setCorrectAnswer("");
+      setRoundEnded(false);
+
       setData(incomingData);
       setPlayers(players);
+
+      console.log(incomingData);
+      setAnswerOptions(incomingData.answer_options);
 
       const rawUrl = incomingData.current_song.video_url;
       setVideoUrl(rawUrl);
@@ -77,6 +88,16 @@ const PlayingRoom = () => {
       setMessages((prev) => [...prev, data]);
       console.log("pesan : ", data);
     });
+
+    socket.on("round-ended", (data) => {
+      setUserAnswer("");
+      setRoundEnded(true);
+      setCorrectAnswer(data.correct_answer);
+    });
+
+    socket.on("game-ended", () => {
+      navigate("/rooms")
+    })
 
     socket.on("leaderboard-update", ({ players }) => {
       setPlayers(players);
@@ -188,40 +209,31 @@ const PlayingRoom = () => {
 
           {/* Answer Options Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["Naruto", "Kimetsu No Yaiba", "Bleach", "Orb"].map(
-              (option, i) => (
-                <Button
-                  key={i}
-                  variant="outline"
-                  className={`h-16 justify-start px-6 bg-white/5 border-white/10 hover:bg-[#5F9598] hover:text-white hover:border-transparent transition-all duration-300 rounded-2xl text-left font-medium group ${option === userAnswer ? "bg-[#5F9598]" : ""}`}
-                  onClick={() => {
-                    submitAnswer(option);
-                  }}
-                >
-                  <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mr-3 group-hover:bg-white/20">
-                    {String.fromCharCode(65 + i)}
-                  </span>
-                  {option}
-                </Button>
-              ),
-            )}
+            {answerOptions?.map((option, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                className={`h-16 justify-start px-6 bg-white/5 border-white/10 hover:bg-[#5F9598] hover:text-white hover:border-transparent transition-all duration-300 rounded-2xl text-left font-medium group 
+                  ${option === userAnswer ? "bg-[#5F9598]" : ""} ${roundEnded ? (correctAnswer === option ? "bg-green-400" : "bg-red-400") : ""}`}
+                onClick={() => {
+                  submitAnswer(option);
+                }}
+              >
+                <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mr-3 group-hover:bg-white/20">
+                  {String.fromCharCode(65 + i)}
+                </span>
+                {option}
+              </Button>
+            ))}
           </div>
         </div>
 
         {/* RIGHT COLUMN: Timer & Chat */}
         <div className="lg:col-span-3 space-y-6">
-          <Card className="bg-[#5F9598] border-none p-6 text-center shadow-lg shadow-[#5F9598]/20">
-            <div className="flex items-center justify-center gap-3 mb-2 text-white">
-              <FaClock className="animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">
-                Time Remaining
-              </span>
-            </div>
-            <h2 className="text-5xl font-black font-mono text-white">
-              {data?.timer_left || 0}
-            </h2>
-          </Card>
-
+          <Timer
+            targetEndAt={data.target_end_at}
+            serverTime={data.server_time}
+          />
           <Card className="bg-white/5 border-white/10 flex flex-col flex-1 overflow-hidden backdrop-blur-sm">
             <div className="p-4 border-b border-white/10 bg-white/5">
               <h3 className="font-bold text-sm uppercase tracking-widest text-gray-400 flex items-center gap-2">
@@ -242,7 +254,7 @@ const PlayingRoom = () => {
                       className="text-[11px] font-bold mb-1 ml-1"
                       style={{ color: msg.color || "#5F9598" }}
                     >
-                      {msg.player_id === userId ? "Me" : username}
+                      {msg.player_id === userId ? "Me" : msg.player_username}
                     </p>
                     <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-none px-3 py-2 shadow-sm">
                       <p className="text-sm text-gray-200 break-words">
