@@ -11,9 +11,10 @@ import { Label } from "../components/ui/label";
 import { FaPlay, FaUsers } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "@/context/userContext";
+import axios from "axios";
 
 const Home = () => {
-  const { username, setUsername, setUserId } = useContext(UserContext);
+  const { username, setUsername, userId, setUserId } = useContext(UserContext);
   const navigate = useNavigate();
 
   const saveUserData = () => {
@@ -28,6 +29,19 @@ const Home = () => {
     setUsername(username);
 
     navigate("/rooms");
+  };
+
+  const handleSinglePlayer = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:3000/rooms/singleplayer", {
+        host_id: userId,
+        host_username: username,
+      });
+      const roomId = response.data.data.room_id;
+      navigate(`/rooms/${roomId}`);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -63,7 +77,7 @@ const Home = () => {
         <CardFooter className="flex flex-col sm:flex-row items-center gap-4 p-8 pt-4">
           <Button
             className="w-full md:w-1/2 py-7 bg-[#5F9598] hover:bg-[#4d7a7d] text-white rounded-xl font-bold flex gap-2 items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-[#5F9598]/20"
-            onClick={saveUserData}
+            onClick={() => handleSinglePlayer()}
           >
             <FaPlay className="text-xs" /> Solo Mode
           </Button>
