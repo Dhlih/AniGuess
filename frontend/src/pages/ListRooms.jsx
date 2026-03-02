@@ -32,6 +32,9 @@ const ListRooms = () => {
   const [guessingDuration, setGuessingDuration] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState([]);
+  const [guessingDurationError, setGuessingDurationError] = useState(false);
+  const [totalSongsError, setTotalSongsError] = useState(false);
+  const [maxPlayersError, setMaxPlayersError] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const socket = useContext(SocketContext);
@@ -39,16 +42,36 @@ const ListRooms = () => {
   const navigate = useNavigate();
 
   const createRoom = async () => {
-    if (!maxPlayers || !totalSongs || !guessingDuration) return;
+    let hasError = false;
+
+    if (Number(maxPlayers) < 2) {
+      setMaxPlayersError(true);
+      hasError = true;
+    }
+
+    if (Number(guessingDuration) < 5) {
+      setGuessingDurationError(true);
+      hasError = true;
+    }
+
+    if (Number(totalSongs) < 5) {
+      setTotalSongsError(true);
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     try {
-      const response = await axios.post("http://127.0.0.1:3000/rooms", {
-        max_players: Number(maxPlayers),
-        total_songs: Number(totalSongs),
-        guessing_duration: Number(guessingDuration),
-        host_id: userId,
-        host_username: username,
-      });
+      const response = await axios.post(
+        "http://127.0.0.1:3000/rooms/multiplayer",
+        {
+          max_players: Number(maxPlayers),
+          total_songs: Number(totalSongs),
+          guessing_duration: Number(guessingDuration),
+          host_id: userId,
+          host_username: username,
+        },
+      );
 
       const roomId = response.data.data.room_id;
       navigate(`/rooms/${roomId}`);
@@ -77,6 +100,8 @@ const ListRooms = () => {
     }
   };
 
+  console.log(guessingDurationError);
+
   useEffect(() => {
     getRoomsData();
 
@@ -84,10 +109,21 @@ const ListRooms = () => {
       alert(data.msg);
     });
 
+    if (guessingDurationError || totalSongsError || maxPlayersError) {
+      const time = setTimeout(() => {
+        setGuessingDurationError("");
+        setTotalSongsError("");
+        setMaxPlayersError("");
+      }, 2000);
+      return () => {
+        clearTimeout(time);
+      };
+    }
+
     return () => {
       socket.off("error");
     };
-  }, []);
+  }, [guessingDurationError, totalSongsError, maxPlayersError]);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#04121a] p-6">
@@ -163,6 +199,11 @@ const ListRooms = () => {
                       onChange={(evt) => setGuessingDuration(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
+                    {guessingDurationError && (
+                      <p className="text-red-400">
+                        Guessing duration can't be set less than 5 sec
+                      </p>
+                    )}
                   </div>
 
                   {/* Input Jumlah Lagu */}
@@ -176,6 +217,11 @@ const ListRooms = () => {
                       onChange={(evt) => setTotalSongs(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
+                    {totalSongsError && (
+                      <p className="text-red-400">
+                        Number of songs can't be set less than 5
+                      </p>
+                    )}
                   </div>
 
                   {/* Input Jumlah Orang */}
@@ -189,6 +235,11 @@ const ListRooms = () => {
                       onChange={(evt) => setMaxPlayers(evt.target.value)}
                       className="bg-white/5 border-white/10 py-6 focus:ring-[#5F9598]"
                     />
+                    {maxPlayersError && (
+                      <p className="text-red-400">
+                        Max players can't be set less than 2
+                      </p>
+                    )}
                   </div>
                 </div>
 
