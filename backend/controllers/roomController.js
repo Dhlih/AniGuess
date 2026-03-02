@@ -28,7 +28,7 @@ const getRooms = async (req, res) => {
   }
 };
 
-const createRoom = async (req, res) => {
+const createMultiPlayerRoom = async (req, res) => {
   const {
     max_players,
     total_songs,
@@ -46,6 +46,43 @@ const createRoom = async (req, res) => {
       guessing_duration,
       host_id,
       status: "waiting",
+    });
+
+    // store host init score
+    await client.ZADD(`rooms:${roomId}:scores`, [
+      {
+        score: 0,
+        value: `${host_id}:${host_username}`,
+      },
+    ]);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        room_id: roomId,
+        details: req.body,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, data: null });
+  }
+};
+
+const createSinglePlayerRoom = async (req, res) => {
+  const {
+    host_id,
+    host_username,
+  } = req.body;
+
+  const roomId = await generateRoomId();
+
+  try {
+    await client.HSET(`rooms:${roomId}:details`, {
+      host_id,
+      status: "waiting",
+      max_players : 1,
+      guessing_duration : 15,
+      total_songs : 10
     });
 
     // store host init score
@@ -97,4 +134,4 @@ const getRoomAccess = async (req, res) => {
 
 
 
-module.exports = { getRooms, createRoom, getRoomAccess };
+module.exports = { getRooms, createSinglePlayerRoom, createMultiPlayerRoom ,getRoomAccess };
